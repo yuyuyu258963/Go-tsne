@@ -118,6 +118,15 @@ func search_prob(x [][]float64, tol float64, perplexity float64) [][]float64 {
 	return pair_prob
 }
 
+// func tsne(x [][]float64, no_dims int, initial_dims int, perplexity float64, max_iter int) {
+// 	n, d := len(x), len(x[0])
+
+// 	// 动量
+// 	eta := 500
+// 	// 初始化Y
+	
+// }
+
 
 func main() {
 	a := []float64{1.0, 2.0}
