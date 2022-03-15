@@ -9,14 +9,6 @@ const (
 	MINNUM  		float64	 =    1e-12
 )
 
-func cal_dist(a []float64, b []float64) float64 {
-	sum := 0.0
-	for i := 0; i < len(a); i++ {
-		sum += (a[i] - b[i]) * (a[i] - b[i])
-	}
-	return sum
-}
-
 //  x -> x * m维度的矩阵， 表示n个样本m个属性
 // 计算出任意两个点的距离的平方
 func cal_pairwise_dist(vec [][]float64) (distVector [][]float64) {
@@ -118,21 +110,41 @@ func search_prob(x [][]float64, tol float64, perplexity float64) [][]float64 {
 	return pair_prob
 }
 
+// 
 // func tsne(x [][]float64, no_dims int, initial_dims int, perplexity float64, max_iter int) {
 // 	n, d := len(x), len(x[0])
 
 // 	// 动量
 // 	eta := 500
 // 	// 初始化Y
+// 	y := randomRandn(n, no_dims)
+// 	dy := getZeroVec(n, no_dims)
+
+// 	p := search_prob(x, 1e-5, perplexity)
+// 	pT := transpose(p)
+// 	p = add2vec(p, pT)
+// 	p = division(p, sumSelf(p))
+// 	p = division(p, 1 / 4)
+// 	maxminVec(p)
+
+// 	for i := 0; i < max_iter; i++ {
+// 		distVec := cal_pairwise_dist(y)
+// 		recVec(distVec)
+// 		q := division(distVec, sumSelf(distVec))
+// 		maxminVec(q)
+// 		PQ := subtraction(p,q)
+		
+		
+// 	}
 	
 // }
 
 
 func main() {
-	a := []float64{1.0, 2.0}
-	b := []float64{3.0, 4.0}
-	d := []float64{3.0, 4.0}
-	c := cal_pairwise_dist([][]float64{a, b, d})
+
+	a := []float64{1.0, 2}
+	b := []float64{1.0, 2}
+	c := [][]float64{a,b}
+	maxminVec(c)
 	fmt.Printf("%+v\n", c)
-	// fmt.Println("main")
 }
