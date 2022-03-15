@@ -17,7 +17,7 @@ func cal_pairwise_dist(vec [][]float64) (distVector [][]float64) {
 	for index, basic := range vec {
 		distVector[index] = make([]float64, vecLen)
 		for index2, basic2 := range vec {
-			distVector[index][index2] = cal_dist(basic, basic2)
+			distVector[index][index2] = cal_dist(basic, basic2) + 1
 		}
 	}
 	return distVector
@@ -36,10 +36,11 @@ func cal_perplexity(dist []float64, idx int, beta float64) ( float64, []float64)
 	for _, v := range prob {
 		sum += v
 	}
-	fmt.Printf("%+v\n", sum)
+	// fmt.Printf("%+v\n", sum)
 	if sum == 0 {	
 		for i, v := range prob {
 			prob[i] = math.Max(v, MINNUM)
+			// fmt.Println(math.Log(1))
 		}
 		perp = -12
 	} else {
@@ -49,7 +50,7 @@ func cal_perplexity(dist []float64, idx int, beta float64) ( float64, []float64)
 		perp = 0
 		for _, v := range prob {
 			if v != 0 {
-				perp -= math.Log(v)
+				perp -= v * math.Log(v)
 			}
 		}
 	}
@@ -60,42 +61,34 @@ func cal_perplexity(dist []float64, idx int, beta float64) ( float64, []float64)
 // 二分搜索寻找beta,并计算pairwise的prob
 func search_prob(x [][]float64, tol float64, perplexity float64) [][]float64 {
 	fmt.Println("Computing pairwise distances...")
-	n, _ := len(x), len(x[0])
+	n := len(x)
 	dist := cal_pairwise_dist(x)
 	beta := make([]float64, n)
 	for i := 0; i < n; i++ {
 		beta[i] = 1.0
 	}
-	pair_prob := make([][]float64, n)
-	for i := 0; i < n; i++ {
-		t := make([]float64, n)
-		for j := 0; j < n; j++ {
-			t[j] = 0.0
-		}
-		pair_prob[i] = t
-	}
-	
+	pair_prob := getZeroVec(n,n)
 	base_perp := math.Log(perplexity)
+
 	for i := 0; i < n; i++ {
-		var this_prob []float64
 		betamin :=  math.Inf(-1)
 		betamax :=  math.Inf(1)
 
-		perp, _ := cal_perplexity(x[i], i, beta[i])
-
+		perp, this_prob := cal_perplexity(x[i], i, beta[i])
+		// fmt.Println("this_prob", this_prob)
 		perp_diff := perp - base_perp
 		tries := 0
 		for math.Abs(perp_diff) > tol && tries < 50 { 
 			if perp_diff > 0 {
 				betamin = beta[i]
-				if betamax == math.Inf(1) {
+				if betamax == math.Inf(1) || betamax == math.Inf(-1) {
 					beta[i] *= 2
 				} else {
 					beta[i] = (beta[i] + betamax) / 2
 				}
 			} else {
 				betamax = beta[i]
-				if betamin == math.Inf(-1) {
+				if betamin == math.Inf(-1) || betamin == math.Inf(1) {
 					beta[i] /= 2
 				} else {
 					beta[i] = (beta[i] + betamin) / 2
@@ -110,41 +103,67 @@ func search_prob(x [][]float64, tol float64, perplexity float64) [][]float64 {
 	return pair_prob
 }
 
-// 
-// func tsne(x [][]float64, no_dims int, initial_dims int, perplexity float64, max_iter int) {
-// 	n, d := len(x), len(x[0])
+// 实现t-sne算法
+func tsne(x [][]float64, no_dims int, initial_dims int, perplexity float64, max_iter int) [][]float64 {
+	n := len(x)
 
-// 	// 动量
-// 	eta := 500
-// 	// 初始化Y
-// 	y := randomRandn(n, no_dims)
-// 	dy := getZeroVec(n, no_dims)
+	// 动量
+	eta := 500.0
+	// 初始化Y
+	y := randomRandn(n, no_dims)
+	dy := getZeroVec(n, no_dims)
 
-// 	p := search_prob(x, 1e-5, perplexity)
-// 	pT := transpose(p)
-// 	p = add2vec(p, pT)
-// 	p = division(p, sumSelf(p))
-// 	p = division(p, 1 / 4)
-// 	maxminVec(p)
+	p := search_prob(x, 1e-5, perplexity)
+	pT := transpose(p)
+	p = add2vec(p, pT)
+	// fmt.Println(sumSelf(p))
+	_ = division(p, sumSelf(p))
+	_ = division(p, float64(0.25))
+	maxminVec(p)
 
-// 	for i := 0; i < max_iter; i++ {
-// 		distVec := cal_pairwise_dist(y)
-// 		recVec(distVec)
-// 		q := division(distVec, sumSelf(distVec))
-// 		maxminVec(q)
-// 		PQ := subtraction(p,q)
+	for i := 0; i < max_iter; i++ {
+		distVec := cal_pairwise_dist(y)
+		recVec(distVec)
+		if i == 0 {
+			fmt.Println("distVec", distVec)
+		}
+		q := division(distVec, sumSelf(distVec))
+		maxminVec(q)
 		
-		
-// 	}
-	
-// }
+		PQ := subtraction(p, q)
+		for j := 0; j < n; j++ {
+			PQLine := getLine(PQ,j)
+			numLine := getLine(distVec,j)
+			var aim_title [][]float64
+			mutledLine := multiply(PQLine, numLine)
+			for p := 0; p < no_dims; p++ {
+				aim_title = append(aim_title, mutledLine)
+			}
+			aimTileT := transpose(aim_title)
+			subY := lineSubVec(y[j], y)
+			resY := getSumOneVec(aimTileT, subY)
+			dy[j] = resY
+		}
+		meanY := getMean(y)
+		for j := 0; j < n; j++ {
+			for k := 0; k < no_dims; k++ {
+				y[j][k] -= (eta * dy[j][k] + meanY[k])
+			}
+		}
+		// fmt.Println(y)
+		if i == 100 {
+			_ = division(p, 4)
+		}
+	}
+	return y
+}
 
 
 func main() {
-
-	a := []float64{1.0, 2}
-	b := []float64{1.0, 2}
-	c := [][]float64{a,b}
-	maxminVec(c)
-	fmt.Printf("%+v\n", c)
+	a := []float64{1.0, 2, 3.0, 4.0}
+	b := []float64{1.0, 2, 2.0, 3.0} 
+	c := [][]float64{a, b}
+	z := tsne(c, 2, 0, 30.0, 200)
+	// z := cal_pairwise_dist(c)
+	fmt.Println(z)
 }
