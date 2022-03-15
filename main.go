@@ -116,9 +116,10 @@ func tsne(x [][]float64, no_dims int, initial_dims int, perplexity float64, max_
 	p := search_prob(x, 1e-5, perplexity)
 	pT := transpose(p)
 	p = add2vec(p, pT)
+
 	// fmt.Println(sumSelf(p))
-	_ = division(p, sumSelf(p))
-	_ = division(p, float64(0.25))
+	p = division(p, sumSelf(p))
+	p = division(p, float64(0.25))
 	maxminVec(p)
 
 	for i := 0; i < max_iter; i++ {
@@ -132,8 +133,8 @@ func tsne(x [][]float64, no_dims int, initial_dims int, perplexity float64, max_
 		
 		PQ := subtraction(p, q)
 		for j := 0; j < n; j++ {
-			PQLine := getLine(PQ,j)
-			numLine := getLine(distVec,j)
+			PQLine := getCol(PQ, j)
+			numLine := getCol(distVec, j)
 			var aim_title [][]float64
 			mutledLine := multiply(PQLine, numLine)
 			for p := 0; p < no_dims; p++ {
@@ -152,7 +153,7 @@ func tsne(x [][]float64, no_dims int, initial_dims int, perplexity float64, max_
 		}
 		// fmt.Println(y)
 		if i == 100 {
-			_ = division(p, 4)
+			p = division(p, 4)
 		}
 	}
 	return y
@@ -163,7 +164,7 @@ func main() {
 	a := []float64{1.0, 2, 3.0, 4.0}
 	b := []float64{1.0, 2, 2.0, 3.0} 
 	c := [][]float64{a, b}
-	z := tsne(c, 2, 0, 30.0, 200)
+	z := tsne(c, 2, 0, 30.0, 800)
 	// z := cal_pairwise_dist(c)
 	fmt.Println(z)
 }

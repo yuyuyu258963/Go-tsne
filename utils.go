@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -30,7 +29,7 @@ func GetGaussRandomNum() float64 {
 	rand.Seed(time.Now().UnixNano())
 	x := rand.Float64()
 	x1 := rand.Float64()
-	fmt.Println(x)
+	// fmt.Println(x)
 	a := math.Cos(2*math.Pi*x) * math.Sqrt((-2)*math.Log(x1))
 	result := a*μ + σ
 	return result
@@ -54,9 +53,9 @@ func randomRandn(n int, m int) [][]float64 {
 func transpose(x [][]float64)( y [][]float64) {
 	n, m := len(x), len(x[0])
 	for i := 0; i < m; i++ {
-		var t []float64
+		t := make([]float64, n)
 		for j := 0; j < n; j++ {
-			t = append(t, x[j][i])
+			t [j] = x[j][i]
 		}
 		y = append(y, t)
 	}
@@ -90,15 +89,17 @@ func sumSelf(x [][]float64) (sum float64) {
 	return sum
 }
 
-// 实现一个矩阵除以一个数
+// 实现一个矩阵除以一个数  不改变原数组
 func division( x [][]float64, k	float64) [][]float64 {
 	n, m := len(x), len(x[0])
+	res := make([][]float64, n)
 	for i := 0; i < n; i++ {
+		res[i] = make([]float64, m)
 		for j := 0; j < m; j++ {
-			x[i][j] /= k
+			res[i][j] = x[i][j] / k
 		}
 	}
-	return x
+	return res
 }
 
 // 计算两个向量的欧式距离
@@ -150,7 +151,7 @@ func subtraction(x, y [][]float64) [][]float64 {
 }
 
 // 返回一列的矩阵
-func getLine(x [][]float64,lineId int) []float64 {
+func getCol(x [][]float64, lineId int) []float64 {
 	n := len(x)
 	vec := make([]float64, n)
 	for index,v := range x {
@@ -160,10 +161,11 @@ func getLine(x [][]float64,lineId int) []float64 {
 }
 
 // 实现两个矩阵的乘法 各元素相乘
-func multiply(x, y []float64) (z []float64) {
+func multiply(x, y []float64) ([]float64) {
 	n := len(x)
+	z := make([]float64, n)
 	for i := 0; i < n; i++ {
-		z = append(z, x[i] * y[i])
+		z[i] = x[i] * y[i]
 	}
 	return z
 }
